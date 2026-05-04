@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fraud Tab — Member Profile (Interactive Mock v3)</title>
+<style>
+  :root {
+    --soFresh-100: #050614;
+    --soFresh-110: #121320;
+    --soFresh-120: #1f202d;
+    --soFresh-130: #2c2c39;
+    --soFresh-140: #393945;
+    --soFresh-150: #464652;
+    --soFresh-180: #6d6c77;
+    --soClean-100: #fbf9ff;
+    --soClean-110: #eeecf3;
+    --soClean-120: #e1dfe6;
+    --soClean-160: #adacb5;
+    --soClean-180: #93939c;
+    --stankonia-100: #8000ff;
+    --stankonia-200: #6600cc;
+    --status-success: #18ba1d;
+    --status-warning: #f9c67e;
+    --status-caution: #ff9900;
+    --status-failure: #e86060;
+    --status-info: #348df3;
+    --status-special: #b060ff;
+    --roses: #fb3640;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'TT Norms Pro', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    background: var(--soFresh-100);
+    color: var(--soClean-100);
+    font-size: 14px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font-family: inherit; cursor: pointer; }
+  code { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 0.92em; }
+
+  .shell { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+
+  /* Sidebar */
+  .sidebar { background: var(--soFresh-100); border-right: 1px solid var(--soFresh-120); padding: 16px 12px; }
+  .logo-row { display: flex; align-items: center; gap: 8px; margin-bottom: 24px; padding: 0 4px; }
+  .logo { width: 32px; height: 32px; background: linear-gradient(135deg, var(--stankonia-100), var(--stankonia-200)); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; }
+  .env-pill { background: var(--roses); padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; letter-spacing: 0.05em; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 6px; color: var(--soClean-180); font-size: 13px; margin-bottom: 2px; }
+  .nav-item.active { background: var(--soFresh-130); color: var(--soClean-100); }
+  .nav-item .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 0.5; }
+
+  /* Top bar */
+  .topbar { display: flex; align-items: center; padding: 14px 24px; border-bottom: 1px solid var(--soFresh-120); gap: 16px; }
+  .back-btn { width: 32px; height: 32px; border-radius: 6px; background: transparent; border: 1px solid var(--soFresh-140); color: var(--soClean-180); display: flex; align-items: center; justify-content: center; }
+  .crumb-block { display: flex; flex-direction: column; gap: 2px; }
+  .crumb-label { font-size: 11px; color: var(--soClean-180); text-transform: uppercase; letter-spacing: 0.05em; }
+  .crumb-name { font-size: 16px; font-weight: 500; }
+  .crumb-name .email { color: var(--soClean-180); font-weight: 400; margin-left: 4px; }
+  .top-actions { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  .info-block { background: var(--soFresh-120); border-radius: 8px; padding: 8px 14px; display: flex; flex-direction: column; gap: 4px; min-width: 88px; }
+  .info-block .lbl { color: var(--soClean-180); font-size: 11px; line-height: 1; text-transform: uppercase; letter-spacing: 0.04em; }
+  .info-block .val { color: var(--soClean-100); font-weight: 600; font-size: 14px; line-height: 1.2; }
+  .info-block.danger .val { color: var(--roses); }
+  .icon-btn { width: 32px; height: 32px; background: transparent; border: 1px solid var(--soFresh-140); border-radius: 6px; color: var(--soClean-180); display: flex; align-items: center; justify-content: center; }
+
+  /* Tabs */
+  .tabs { display: flex; padding: 0 24px; border-bottom: 1px solid var(--soFresh-120); gap: 4px; overflow-x: auto; }
+  .tab { padding: 14px 12px; color: var(--soClean-180); font-size: 13px; border: none; border-bottom: 2px solid transparent; background: transparent; white-space: nowrap; }
+  .tab.active { color: var(--soClean-100); border-bottom-color: var(--stankonia-100); }
+  .tab.new-badge::after { content: 'NEW'; margin-left: 6px; font-size: 9px; background: var(--stankonia-100); padding: 2px 5px; border-radius: 3px; font-weight: 700; letter-spacing: 0.04em; vertical-align: middle; }
+
+  .content { padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+
+  /* State banner */
+  .state-banner { border-radius: 10px; padding: 18px 22px; display: grid; grid-template-columns: 32px 1fr auto; gap: 16px; align-items: center; transition: all 0.4s ease; }
+  .state-banner.deactivated { background: linear-gradient(90deg, rgba(251, 54, 64, 0.10), rgba(251, 54, 64, 0.02)); border: 1px solid rgba(251, 54, 64, 0.35); }
+  .state-banner.clean { background: linear-gradient(90deg, rgba(24, 186, 29, 0.08), rgba(24, 186, 29, 0.01)); border: 1px solid rgba(24, 186, 29, 0.25); }
+  .state-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; }
+  .state-banner.deactivated .state-icon { background: rgba(251, 54, 64, 0.15); color: var(--roses); }
+  .state-banner.clean .state-icon { background: rgba(24, 186, 29, 0.12); color: var(--status-success); }
+  .state-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .state-headline { color: var(--soClean-100); font-size: 15px; font-weight: 500; }
+  .state-headline .key { color: var(--roses); font-weight: 600; }
+  .state-meta { color: var(--soClean-180); font-size: 13px; display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+  .state-meta .sep { color: var(--soFresh-180); }
+  .state-meta a { color: var(--soClean-160); text-decoration: none; border-bottom: 1px dotted var(--soFresh-180); }
+  .state-meta a:hover { color: var(--soClean-100); border-bottom-color: var(--soClean-180); }
+  .state-cta { display: flex; gap: 10px; align-items: center; }
+  .pending-pill { background: rgba(255, 153, 0, 0.12); color: var(--status-caution); border: 1px solid rgba(255, 153, 0, 0.35); padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 10px; transition: all 0.4s ease; }
+  .pending-pill .count { background: var(--status-caution); color: var(--soFresh-100); font-weight: 700; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+  .pending-pill.zero { background: rgba(24, 186, 29, 0.08); color: var(--status-success); border-color: rgba(24, 186, 29, 0.25); }
+  .pending-pill.zero .count { background: var(--status-success); }
+
+  /* Card */
+  .card { background: var(--soFresh-110); border-radius: 10px; padding: 24px; }
+  .card-title { color: var(--soClean-110); font-size: 16px; font-weight: 500; padding-bottom: 4px; display: flex; align-items: center; justify-content: space-between; }
+  .card-sub { color: var(--soClean-180); font-size: 12px; margin-bottom: 18px; }
+  .card-actions { display: flex; gap: 8px; }
+  .text-btn { background: transparent; border: 1px solid var(--soFresh-140); color: var(--soClean-120); padding: 6px 12px; border-radius: 6px; font-size: 12px; }
+  .text-btn:hover { background: var(--soFresh-130); }
+
+  /* Signal rows */
+  .signal-row { display: grid; grid-template-columns: 3px 1fr auto; gap: 18px; padding: 18px 0; border-top: 1px solid var(--soFresh-120); align-items: start; transition: all 0.35s ease; }
+  .signal-row:first-of-type { border-top: none; padding-top: 8px; }
+  .signal-row .stripe { border-radius: 2px; align-self: stretch; min-height: 100%; transition: background 0.4s ease; }
+  .stripe-pending { background: var(--status-caution); }
+  .stripe-enforced { background: var(--status-failure); }
+  .stripe-trusted { background: var(--status-success); }
+  .signal-body { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .signal-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .signal-name { color: var(--soClean-100); font-weight: 500; font-size: 15px; }
+  .signal-evidence { color: var(--soClean-160); font-size: 13px; line-height: 1.5; }
+  .signal-evidence code { color: var(--soClean-180); }
+  .signal-outcome { color: var(--soClean-160); font-size: 12.5px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding-top: 2px; }
+  .signal-outcome .arrow { color: var(--soFresh-180); font-weight: 600; }
+  .signal-outcome.enforced strong { color: var(--roses); font-weight: 600; }
+  .signal-outcome.trusted strong { color: var(--status-success); font-weight: 600; }
+  .signal-outcome a { color: var(--soClean-160); text-decoration: none; border-bottom: 1px dotted var(--soFresh-180); }
+  .signal-outcome a:hover { color: var(--soClean-100); }
+  .signal-meta { color: var(--soClean-180); font-size: 12px; display: flex; gap: 12px; flex-wrap: wrap; }
+  .signal-meta .sep { color: var(--soFresh-180); }
+
+  /* Badges */
+  .badge { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; line-height: 1; transition: all 0.3s ease; }
+  .badge-3p { background: rgba(232, 96, 96, 0.15); color: var(--status-failure); }
+  .badge-1p { background: rgba(255, 153, 0, 0.15); color: var(--status-caution); }
+  .badge-multi { background: rgba(176, 96, 255, 0.15); color: var(--status-special); }
+  .badge-action { background: rgba(255, 153, 0, 0.12); color: var(--status-caution); border: 1px solid rgba(255, 153, 0, 0.30); }
+  .badge-pass { background: rgba(24, 186, 29, 0.15); color: var(--status-success); }
+  .badge-warn { background: rgba(255, 153, 0, 0.15); color: var(--status-caution); }
+  .badge-trusted-tag { background: rgba(24, 186, 29, 0.12); color: var(--status-success); border: 1px solid rgba(24, 186, 29, 0.25); }
+
+  /* Buttons */
+  .signal-actions { display: flex; gap: 8px; align-items: flex-end; flex-direction: column; }
+  .signal-actions-row { display: flex; gap: 8px; }
+  .signal-actions .helper-link { color: var(--soClean-180); font-size: 11px; }
+  .signal-actions .helper-link a { color: var(--soClean-160); text-decoration: none; border-bottom: 1px dotted var(--soFresh-180); }
+  .btn-primary { background: var(--stankonia-100); color: var(--soClean-100); padding: 8px 16px; border: none; border-radius: 6px; font-size: 13px; font-weight: 500; white-space: nowrap; transition: all 0.2s ease; }
+  .btn-primary:hover { background: var(--stankonia-200); }
+  .btn-primary:active { transform: scale(0.97); }
+  .btn-secondary { background: transparent; border: 1px solid var(--soFresh-140); color: var(--soClean-120); padding: 7px 14px; border-radius: 6px; font-size: 13px; white-space: nowrap; transition: all 0.2s ease; }
+  .btn-secondary:hover { background: var(--soFresh-130); }
+  .btn-ghost { background: transparent; border: none; color: var(--soClean-180); font-size: 12px; padding: 4px 8px; }
+  .btn-ghost:hover { color: var(--soClean-100); }
+  .btn-success { background: var(--status-success); color: var(--soFresh-100); padding: 8px 16px; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+
+  /* Trust drawer */
+  .trust-drawer-wrap { overflow: hidden; max-height: 0; opacity: 0; transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease 0.05s; padding: 0 0 0 21px; }
+  .trust-drawer-wrap.open { max-height: 600px; opacity: 1; padding-bottom: 4px; }
+  .trust-panel { background: rgba(128, 0, 255, 0.06); border: 1px solid rgba(128, 0, 255, 0.30); border-radius: 10px; padding: 22px 24px; display: flex; flex-direction: column; gap: 18px; margin-top: 6px; position: relative; }
+  .trust-panel::before { content: ''; position: absolute; top: -6px; left: 28px; width: 12px; height: 12px; background: var(--soFresh-110); border-left: 1px solid rgba(128, 0, 255, 0.30); border-top: 1px solid rgba(128, 0, 255, 0.30); transform: rotate(45deg); }
+  .trust-headline { display: flex; align-items: flex-start; gap: 14px; }
+  .trust-icon { flex-shrink: 0; width: 32px; height: 32px; background: rgba(128, 0, 255, 0.15); color: var(--stankonia-100); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; margin-top: 1px; }
+  .trust-text { display: flex; flex-direction: column; gap: 6px; }
+  .trust-title { color: var(--soClean-100); font-size: 15px; font-weight: 500; }
+  .trust-consequence { color: var(--soClean-120); font-size: 13.5px; line-height: 1.6; }
+  .trust-consequence strong { color: var(--soClean-100); font-weight: 500; }
+  .trust-consequence .reversible { color: var(--stankonia-100); font-weight: 600; }
+  .trust-form { display: flex; flex-direction: column; gap: 14px; padding-left: 46px; }
+  .form-row { display: flex; flex-direction: column; gap: 6px; }
+  .form-row label { color: var(--soClean-180); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+  .form-row select, .form-row textarea { background: var(--soFresh-120); border: 1px solid var(--soFresh-140); color: var(--soClean-100); padding: 9px 12px; border-radius: 6px; font-family: inherit; font-size: 13px; transition: border-color 0.2s; }
+  .form-row select:focus, .form-row textarea:focus { outline: none; border-color: var(--stankonia-100); box-shadow: 0 0 0 2px rgba(128, 0, 255, 0.15); }
+  .form-row textarea { resize: vertical; min-height: 56px; }
+  .form-helper { color: var(--soClean-180); font-size: 11.5px; font-style: italic; }
+  .trust-actions { display: flex; gap: 10px; justify-content: flex-end; padding: 4px 0 0 46px; }
+
+  /* Success toast */
+  .toast { position: fixed; bottom: -80px; left: 50%; transform: translateX(-50%); background: var(--soFresh-110); border: 1px solid rgba(24, 186, 29, 0.4); border-radius: 10px; padding: 14px 22px; display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 500; z-index: 200; transition: bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+  .toast.show { bottom: 32px; }
+  .toast-dot { width: 10px; height: 10px; background: var(--status-success); border-radius: 50%; box-shadow: 0 0 12px var(--status-success); }
+  .toast .undo-link { color: var(--stankonia-100); margin-left: 8px; cursor: pointer; border-bottom: 1px dotted var(--stankonia-100); }
+
+  /* 3-col grid */
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .field-list { display: flex; flex-direction: column; gap: 16px; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field .field-label { color: var(--soClean-180); font-size: 12px; }
+  .field .field-value { color: var(--soClean-120); font-size: 14px; }
+  .field .field-value.bold { font-weight: 500; color: var(--soClean-100); }
+
+  .net-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 0; border-bottom: 1px solid var(--soFresh-120); }
+  .net-row:last-of-type { border-bottom: none; }
+  .net-label { color: var(--soClean-160); font-size: 13px; }
+  .net-count { display: flex; align-items: center; gap: 8px; color: var(--soClean-100); font-weight: 500; font-size: 14px; }
+  .net-flag { background: rgba(251, 54, 64, 0.15); color: var(--roses); font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .net-total { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--soFresh-120); }
+  .net-total .lbl { color: var(--soClean-180); font-size: 12px; margin-bottom: 4px; }
+  .net-total .val { color: var(--soClean-100); font-weight: 600; font-size: 18px; }
+
+  .watermark { position: fixed; top: 12px; right: 16px; background: rgba(128, 0, 255, 0.15); color: var(--stankonia-100); font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 4px; letter-spacing: 0.06em; text-transform: uppercase; border: 1px solid var(--stankonia-100); z-index: 100; }
+  .footer-note { color: var(--soClean-180); font-size: 12px; padding: 12px 4px 0; border-top: 1px solid var(--soFresh-120); margin-top: 8px; }
+  .footer-note strong { color: var(--soClean-120); font-weight: 500; }
+
+  /* Fade in animation for trusted state */
+  @keyframes fadeShift { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+  .animate-in { animation: fadeShift 0.4s ease forwards; }
+</style>
+</head>
+<body>
+
+<div class="watermark">Interactive Mock · v3</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <div class="toast-dot"></div>
+  <span id="toast-msg">Marcus is now trusted for Device Cluster — 5+ Accounts</span>
+  <span class="undo-link" id="toast-undo">Undo</span>
+</div>
+
+<div class="shell">
+  <aside class="sidebar">
+    <div class="logo-row"><div class="logo">P</div><span class="env-pill">PROD</span></div>
+    <div class="nav-item"><span class="dot"></span>Pre-Match</div>
+    <div class="nav-item"><span class="dot"></span>Trading</div>
+    <div class="nav-item"><span class="dot"></span>Predict</div>
+    <div class="nav-item active"><span class="dot"></span>Members</div>
+    <div class="nav-item"><span class="dot"></span>Entities</div>
+    <div class="nav-item"><span class="dot"></span>Engagement</div>
+    <div class="nav-item"><span class="dot"></span>Rulesets</div>
+    <div class="nav-item"><span class="dot"></span>Payments</div>
+    <div class="nav-item"><span class="dot"></span>Access</div>
+    <div class="nav-item"><span class="dot"></span>Alerts</div>
+  </aside>
+
+  <div>
+    <header class="topbar">
+      <button class="back-btn" aria-label="Back">‹</button>
+      <div class="crumb-block">
+        <div class="crumb-label">Members</div>
+        <div class="crumb-name">Marcus Reeves <span class="email">• marcus.reeves@example.com</span></div>
+      </div>
+      <div class="top-actions">
+        <div class="info-block"><span class="lbl">Credit</span><span class="val">$847.30</span></div>
+        <div class="info-block"><span class="lbl">Predict Credit</span><span class="val">$0.00</span></div>
+        <div class="info-block"><span class="lbl">Promo</span><span class="val">$25.00</span></div>
+        <div class="info-block"><span class="lbl">NGR</span><span class="val">$1,240.00</span></div>
+        <div class="info-block"><span class="lbl">State</span><span class="val">FL</span></div>
+        <div class="info-block danger"><span class="lbl">Groups</span><span class="val">DEACTIVATION FRAUD</span></div>
+        <button class="icon-btn">✉</button>
+        <button class="icon-btn">⟳</button>
+        <button class="icon-btn">⋮</button>
+      </div>
+    </header>
+
+    <nav class="tabs">
+      <button class="tab">Profile</button>
+      <button class="tab">Lineups</button>
+      <button class="tab">Transactions</button>
+      <button class="tab">Deposits</button>
+      <button class="tab">Withdrawals</button>
+      <button class="tab">Payment Methods</button>
+      <button class="tab">Referrals</button>
+      <button class="tab">Responsible Gaming</button>
+      <button class="tab">Promotions</button>
+      <button class="tab">Missions</button>
+      <button class="tab">Contests</button>
+      <button class="tab">Progressions</button>
+      <button class="tab">Notes</button>
+      <button class="tab active new-badge">Fraud</button>
+    </nav>
+
+    <main class="content">
+
+      <!-- STATE BANNER -->
+      <div class="state-banner deactivated" id="state-banner">
+        <div class="state-icon" id="state-icon">!</div>
+        <div class="state-text">
+          <div class="state-headline" id="state-headline">
+            Currently <span class="key">deactivated</span> — DEACTIVATION FRAUD <span style="color: var(--soClean-180); font-weight: 400;">(group 31)</span>
+          </div>
+          <div class="state-meta">
+            <span>Since May 2, 2026</span>
+            <span class="sep">·</span>
+            <span>Triggered by: <em style="font-style:normal; color:var(--soClean-160);">Stacked Deposits — New Account + Mismatch</em></span>
+            <span class="sep">·</span>
+            <a href="#">View change log ›</a>
+          </div>
+        </div>
+        <div class="state-cta">
+          <div class="pending-pill" id="pending-pill">
+            <span class="count" id="pending-count">2</span>
+            <span id="pending-label">pending signals</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SIGNAL ACTIVITY -->
+      <div class="card" id="signal-card">
+        <div class="card-title">
+          <span>Signal Activity</span>
+          <div class="card-actions">
+            <button class="text-btn">Filter</button>
+            <button class="text-btn">All Events ›</button>
+          </div>
+        </div>
+        <div class="card-sub"><span id="event-count">5</span> events on this user · Most recent first</div>
+
+        <!-- ROW 1: PENDING — Device Cluster -->
+        <div class="signal-row" id="row-1">
+          <div class="stripe stripe-pending" id="stripe-1"></div>
+          <div class="signal-body">
+            <div class="signal-head" id="head-1">
+              <span class="signal-name">Device Cluster — 5+ Accounts</span>
+              <span class="badge badge-3p">3P Fraud</span>
+              <span class="badge badge-action" id="status-badge-1">Pending</span>
+            </div>
+            <div class="signal-evidence">5 active accounts share device <code>d3f0bc91…3111e18</code> · first seen 14 days ago</div>
+            <div id="outcome-1"></div>
+            <div class="signal-meta">
+              <span>Fired 2h ago</span><span class="sep">·</span><span>Source: Automated</span><span class="sep">·</span><span><code>xpoint_device_cluster_5</code></span>
+            </div>
+          </div>
+          <div class="signal-actions" id="actions-1">
+            <div class="signal-actions-row">
+              <button class="btn-secondary">View evidence</button>
+              <button class="btn-primary" onclick="openTrustDrawer(1)">Trust Marcus</button>
+            </div>
+            <span class="helper-link">or take action via <a href="#">Member Groups ›</a></span>
+          </div>
+        </div>
+
+        <!-- TRUST DRAWER 1 -->
+        <div class="trust-drawer-wrap" id="drawer-1">
+          <div class="trust-panel">
+            <div class="trust-headline">
+              <div class="trust-icon">✓</div>
+              <div class="trust-text">
+                <div class="trust-title">Trust Marcus for <em style="font-style:normal;">Device Cluster — 5+ Accounts</em>?</div>
+                <div class="trust-consequence">
+                  <strong>Marcus will be exempt from this signal going forward.</strong> It will keep firing on other accounts normally. <span class="reversible">Reversible</span> — you can untrust at any time from this tab.
+                </div>
+              </div>
+            </div>
+            <div class="trust-form">
+              <div class="form-row">
+                <label>Reason</label>
+                <select id="reason-1">
+                  <option value="">Select a reason…</option>
+                  <option>Legitimate user — verified manually</option>
+                  <option>Known dev / test device</option>
+                  <option>Family or shared household</option>
+                  <option>Investigated, no fraud confirmed</option>
+                  <option>Other (explain in note)</option>
+                </select>
+              </div>
+              <div class="form-row">
+                <label>Note <span style="font-weight:400; text-transform:none; letter-spacing:0;">(optional)</span></label>
+                <textarea id="note-1" placeholder="Context for future analysts. Visible in the audit trail."></textarea>
+                <span class="form-helper">Future-you will thank you. So will the analyst who picks this up in 6 months.</span>
+              </div>
+            </div>
+            <div class="trust-actions">
+              <button class="btn-secondary" onclick="closeTrustDrawer(1)">Cancel</button>
+              <button class="btn-primary" onclick="confirmTrust(1)" id="confirm-btn-1">Trust Marcus for this signal</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ROW 2: PENDING — Ban Evasion -->
+        <div class="signal-row" id="row-2">
+          <div class="stripe stripe-pending" id="stripe-2"></div>
+          <div class="signal-body">
+            <div class="signal-head" id="head-2">
+              <span class="signal-name">Ban Evasion — Same Payment Method</span>
+              <span class="badge badge-3p">3P Fraud</span>
+              <span class="badge badge-action" id="status-badge-2">Pending</span>
+            </div>
+            <div class="signal-evidence">Visa <code>•••• 4471</code> previously on user #8829341 (DEACTIVATION FRAUD, group 31)</div>
+            <div id="outcome-2"></div>
+            <div class="signal-meta">
+              <span>Fired 6h ago</span><span class="sep">·</span><span>Source: Automated</span><span class="sep">·</span><span><code>ban_evasion_payment</code></span>
+            </div>
+          </div>
+          <div class="signal-actions" id="actions-2">
+            <div class="signal-actions-row">
+              <button class="btn-secondary">View evidence</button>
+              <button class="btn-primary" onclick="openTrustDrawer(2)">Trust Marcus</button>
+            </div>
+            <span class="helper-link">or take action via <a href="#">Member Groups ›</a></span>
+          </div>
+        </div>
+
+        <!-- TRUST DRAWER 2 -->
+        <div class="trust-drawer-wrap" id="drawer-2">
+          <div class="trust-panel">
+            <div class="trust-headline">
+              <div class="trust-icon">✓</div>
+              <div class="trust-text">
+                <div class="trust-title">Trust Marcus for <em style="font-style:normal;">Ban Evasion — Same Payment Method</em>?</div>
+                <div class="trust-consequence">
+                  <strong>Marcus will be exempt from this signal going forward.</strong> It will keep firing on other accounts normally. <span class="reversible">Reversible</span> — you can untrust at any time from this tab.
+                </div>
+              </div>
+            </div>
+            <div class="trust-form">
+              <div class="form-row">
+                <label>Reason</label>
+                <select id="reason-2">
+                  <option value="">Select a reason…</option>
+                  <option>Legitimate user — verified manually</option>
+                  <option>Known dev / test device</option>
+                  <option>Family or shared household</option>
+                  <option>Investigated, no fraud confirmed</option>
+                  <option>Other (explain in note)</option>
+                </select>
+              </div>
+              <div class="form-row">
+                <label>Note <span style="font-weight:400; text-transform:none; letter-spacing:0;">(optional)</span></label>
+                <textarea id="note-2" placeholder="Context for future analysts. Visible in the audit trail."></textarea>
+                <span class="form-helper">Future-you will thank you. So will the analyst who picks this up in 6 months.</span>
+              </div>
+            </div>
+            <div class="trust-actions">
+              <button class="btn-secondary" onclick="closeTrustDrawer(2)">Cancel</button>
+              <button class="btn-primary" onclick="confirmTrust(2)">Trust Marcus for this signal</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ROW 3: AUTO-ENFORCED -->
+        <div class="signal-row">
+          <div class="stripe stripe-enforced"></div>
+          <div class="signal-body">
+            <div class="signal-head">
+              <span class="signal-name">Stacked Deposits — New Account + Mismatch</span>
+              <span class="badge badge-3p">3P Fraud</span>
+            </div>
+            <div class="signal-evidence">4 deposits in 12 min · playthrough 4% · name/email mismatch · account age 3d</div>
+            <div class="signal-outcome enforced"><span class="arrow">→</span> Auto-enforced to <strong>DEACTIVATION FRAUD</strong> (group 31) · <a href="#">view in change log ›</a></div>
+            <div class="signal-meta"><span>Fired 1d ago</span><span class="sep">·</span><span><code>stacked_deposits_new</code></span></div>
+          </div>
+          <div class="signal-actions"><button class="btn-ghost">Details ›</button></div>
+        </div>
+
+        <!-- ROW 4: USER TRUSTED -->
+        <div class="signal-row" id="row-existing-trust">
+          <div class="stripe stripe-trusted"></div>
+          <div class="signal-body">
+            <div class="signal-head">
+              <span class="signal-name">Multi-accounting — Same Address × 3</span>
+              <span class="badge badge-multi">Multi-Acct</span>
+            </div>
+            <div class="signal-evidence">3 accounts at 4677 Grand Strand Dr · same surname, separate payment methods</div>
+            <div class="signal-outcome trusted"><span class="arrow">→</span> Skipped: <strong>Marcus is trusted</strong> for this signal · by <a href="#">analyst.kraken</a> on Apr 30 — "verified family household"</div>
+            <div class="signal-meta"><span>Fired 3d ago</span><span class="sep">·</span><span><code>multi_acct_address</code></span></div>
+          </div>
+          <div class="signal-actions">
+            <button class="btn-secondary" onclick="handleUntrust('existing')">Untrust</button>
+          </div>
+        </div>
+
+        <!-- ROW 5: AUTO-ENFORCED -->
+        <div class="signal-row">
+          <div class="stripe stripe-enforced"></div>
+          <div class="signal-body">
+            <div class="signal-head">
+              <span class="signal-name">Socure High-Risk Code R414</span>
+              <span class="badge badge-3p">3P Fraud</span>
+            </div>
+            <div class="signal-evidence">Socure returned R414 (device session 2+ emails) · score 0.21</div>
+            <div class="signal-outcome enforced"><span class="arrow">→</span> Auto-enforced to <strong>DEACTIVATION FRAUD</strong> (group 31) · <a href="#">view in change log ›</a></div>
+            <div class="signal-meta"><span>Fired 5d ago</span><span class="sep">·</span><span><code>socure_r414</code></span></div>
+          </div>
+          <div class="signal-actions"><button class="btn-ghost">Details ›</button></div>
+        </div>
+      </div>
+
+      <!-- 3-COL GRID -->
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-title">Financial Summary</div>
+          <div class="card-sub">Lifetime · USD</div>
+          <div class="field-list">
+            <div class="field"><span class="field-label">Total Deposits</span><span class="field-value bold">$1,420.00</span></div>
+            <div class="field"><span class="field-label">Total Withdrawals</span><span class="field-value bold">$0.00</span></div>
+            <div class="field"><span class="field-label">Net Extraction</span><span class="field-value bold" style="color:var(--status-warning)">-$1,420.00</span></div>
+            <div class="field"><span class="field-label">Promo Balance</span><span class="field-value">$25.00</span></div>
+            <div class="field"><span class="field-label">Pending Withdrawals</span><span class="field-value">$0.00</span></div>
+            <div class="field"><span class="field-label">Deposit Velocity (7d vs 30d avg)</span><span class="field-value bold" style="color:var(--status-failure)">3.4× higher</span></div>
+            <div class="field"><span class="field-label">Playthrough Ratio</span><span class="field-value">12% <span style="color:var(--soClean-180)">(low)</span></span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Risk Snapshot</div>
+          <div class="card-sub">Identity + verification</div>
+          <div class="field-list">
+            <div class="field"><span class="field-label">Socure Fraud Score</span><span class="field-value bold">0.21 · Sigma 4.8 <span class="badge badge-warn" style="margin-left:6px">High Risk</span></span></div>
+            <div class="field"><span class="field-label">Socure Risk Codes</span><span class="field-value">R414 — device session 2+ emails</span></div>
+            <div class="field"><span class="field-label">Account Age</span><span class="field-value bold" style="color:var(--status-caution)">14 days</span></div>
+            <div class="field"><span class="field-label">Idology Verification</span><span class="field-value"><span class="badge badge-pass">Passed</span></span></div>
+            <div class="field"><span class="field-label">Socure Verification</span><span class="field-value"><span class="badge badge-warn">Refer</span></span></div>
+            <div class="field"><span class="field-label">Internal Verification</span><span class="field-value"><span class="badge badge-pass">Passed</span></span></div>
+            <div class="field"><span class="field-label">Date of Birth</span><span class="field-value">March 18, 1991 (Age 35)</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><span>Network Summary</span><button class="text-btn">Full Network ›</button></div>
+          <div class="card-sub">Linked accounts by relationship</div>
+          <div>
+            <div class="net-row"><span class="net-label">Same device (XPoint)</span><span class="net-count">5 <span class="net-flag">3 in fraud</span></span></div>
+            <div class="net-row"><span class="net-label">Same payment method</span><span class="net-count">2 <span class="net-flag">1 in fraud</span></span></div>
+            <div class="net-row"><span class="net-label">Same address</span><span class="net-count">3</span></div>
+            <div class="net-row"><span class="net-label">Same referral chain</span><span class="net-count">1</span></div>
+            <div class="net-row"><span class="net-label">Same IP (signup)</span><span class="net-count">4</span></div>
+            <div class="net-row"><span class="net-label">PUSH token match</span><span class="net-count">2</span></div>
+          </div>
+          <div class="net-total"><div class="lbl">Total unique linked accounts</div><div class="val">7</div></div>
+        </div>
+      </div>
+
+      <div class="footer-note">
+        <strong>CS view:</strong> Agents with CS-only permission see the state banner and a human-readable reason only. Signal Activity, trust, financials, and network are hidden. Answers: <em>"why is this user blocked?"</em>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script>
+  const signalNames = {
+    1: 'Device Cluster — 5+ Accounts',
+    2: 'Ban Evasion — Same Payment Method'
+  };
+
+  let pendingCount = 2;
+  let activeDrawer = null;
+
+  function openTrustDrawer(id) {
+    if (activeDrawer && activeDrawer !== id) {
+      closeTrustDrawer(activeDrawer);
+    }
+    const drawer = document.getElementById('drawer-' + id);
+    drawer.classList.add('open');
+    activeDrawer = id;
+    setTimeout(() => {
+      drawer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 100);
+  }
+
+  function closeTrustDrawer(id) {
+    const drawer = document.getElementById('drawer-' + id);
+    drawer.classList.remove('open');
+    if (activeDrawer === id) activeDrawer = null;
+  }
+
+  function confirmTrust(id) {
+    const reason = document.getElementById('reason-' + id).value;
+    if (!reason) {
+      document.getElementById('reason-' + id).style.borderColor = var_roses();
+      document.getElementById('reason-' + id).focus();
+      setTimeout(() => {
+        document.getElementById('reason-' + id).style.borderColor = '';
+      }, 1500);
+      return;
+    }
+
+    const note = document.getElementById('note-' + id).value;
+    closeTrustDrawer(id);
+
+    const stripe = document.getElementById('stripe-' + id);
+    stripe.classList.remove('stripe-pending');
+    stripe.classList.add('stripe-trusted');
+
+    const statusBadge = document.getElementById('status-badge-' + id);
+    statusBadge.textContent = 'Trusted';
+    statusBadge.className = 'badge badge-trusted-tag';
+
+    const outcome = document.getElementById('outcome-' + id);
+    const reasonText = reason || 'Legitimate user';
+    const noteText = note ? ' — "' + note + '"' : '';
+    outcome.innerHTML = '<div class="signal-outcome trusted animate-in"><span class="arrow">→</span> Skipped: <strong>Marcus is trusted</strong> for this signal · by <a href="#">you</a> just now — "' + reasonText + '"' + noteText + '</div>';
+
+    const actions = document.getElementById('actions-' + id);
+    actions.innerHTML = '<button class="btn-secondary" onclick="handleUntrust(' + id + ')">Untrust</button>';
+
+    pendingCount--;
+    updatePendingPill();
+
+    showToast('Marcus is now trusted for ' + signalNames[id]);
+  }
+
+  function handleUntrust(id) {
+    if (id === 'existing') {
+      showToast('Trust removed — Multi-accounting signal will evaluate normally for Marcus');
+      const row = document.getElementById('row-existing-trust');
+      const stripe = row.querySelector('.stripe');
+      stripe.classList.remove('stripe-trusted');
+      stripe.classList.add('stripe-pending');
+      const head = row.querySelector('.signal-head');
+      if (!head.querySelector('.badge-action')) {
+        const badge = document.createElement('span');
+        badge.className = 'badge badge-action animate-in';
+        badge.textContent = 'Pending';
+        head.appendChild(badge);
+      }
+      const outcomeEl = row.querySelector('.signal-outcome');
+      if (outcomeEl) outcomeEl.remove();
+      const actionsEl = row.querySelector('.signal-actions');
+      actionsEl.innerHTML = '<div class="signal-actions-row"><button class="btn-secondary">View evidence</button><button class="btn-primary" onclick="handleRetrustExisting()">Trust Marcus</button></div><span class="helper-link">or take action via <a href="#">Member Groups ›</a></span>';
+      pendingCount++;
+      updatePendingPill();
+      return;
+    }
+
+    showToast('Trust removed — ' + signalNames[id] + ' will evaluate normally for Marcus');
+
+    const stripe = document.getElementById('stripe-' + id);
+    stripe.classList.remove('stripe-trusted');
+    stripe.classList.add('stripe-pending');
+
+    const statusBadge = document.getElementById('status-badge-' + id);
+    statusBadge.textContent = 'Pending';
+    statusBadge.className = 'badge badge-action animate-in';
+
+    const outcome = document.getElementById('outcome-' + id);
+    outcome.innerHTML = '';
+
+    const actions = document.getElementById('actions-' + id);
+    actions.innerHTML = '<div class="signal-actions-row"><button class="btn-secondary">View evidence</button><button class="btn-primary" onclick="openTrustDrawer(' + id + ')">Trust Marcus</button></div><span class="helper-link">or take action via <a href="#">Member Groups ›</a></span>';
+
+    document.getElementById('reason-' + id).value = '';
+    document.getElementById('note-' + id).value = '';
+
+    pendingCount++;
+    updatePendingPill();
+  }
+
+  function handleRetrustExisting() {
+    showToast('For the mock, trust restored for Multi-accounting');
+    const row = document.getElementById('row-existing-trust');
+    const stripe = row.querySelector('.stripe');
+    stripe.classList.remove('stripe-pending');
+    stripe.classList.add('stripe-trusted');
+    const actionBadge = row.querySelector('.badge-action');
+    if (actionBadge) actionBadge.remove();
+    const head = row.querySelector('.signal-head');
+    const evidence = row.querySelector('.signal-evidence');
+    const metaEl = row.querySelector('.signal-meta');
+    const outcomeDiv = document.createElement('div');
+    outcomeDiv.innerHTML = '<div class="signal-outcome trusted animate-in"><span class="arrow">→</span> Skipped: <strong>Marcus is trusted</strong> for this signal · by <a href="#">analyst.kraken</a> on Apr 30 — "verified family household"</div>';
+    metaEl.parentNode.insertBefore(outcomeDiv.firstChild, metaEl);
+    const actionsEl = row.querySelector('.signal-actions');
+    actionsEl.innerHTML = '<button class="btn-secondary" onclick="handleUntrust(\'existing\')">Untrust</button>';
+    pendingCount--;
+    updatePendingPill();
+  }
+
+  function updatePendingPill() {
+    const pill = document.getElementById('pending-pill');
+    const countEl = document.getElementById('pending-count');
+    const labelEl = document.getElementById('pending-label');
+    countEl.textContent = pendingCount;
+
+    if (pendingCount === 0) {
+      pill.classList.add('zero');
+      labelEl.textContent = 'all signals resolved';
+    } else {
+      pill.classList.remove('zero');
+      labelEl.textContent = pendingCount === 1 ? 'pending signal' : 'pending signals';
+    }
+  }
+
+  let toastTimer;
+  function showToast(msg) {
+    clearTimeout(toastTimer);
+    const toast = document.getElementById('toast');
+    document.getElementById('toast-msg').textContent = msg;
+    toast.classList.add('show');
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 4000);
+  }
+
+  document.getElementById('toast-undo').addEventListener('click', () => {
+    document.getElementById('toast').classList.remove('show');
+  });
+
+  function var_roses() { return '#fb3640'; }
+</script>
+
+</body>
+</html>
